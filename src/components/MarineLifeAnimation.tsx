@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Fish, Jellyfish, Dolphin, Whale, Crab, Seahorse, Squid } from 'lucide-react';
+import { Fish, Anchor, Ship, Sailboat, Waves } from 'lucide-react';
 
 const MarineLifeAnimation = () => {
   const [marineLife, setMarineLife] = useState<Array<{
@@ -18,12 +18,12 @@ const MarineLifeAnimation = () => {
   useEffect(() => {
     // Generate random marine life
     const generateMarineLife = () => {
-      const types = ['fish', 'jellyfish', 'dolphin', 'whale', 'crab', 'seahorse', 'squid'];
+      const types = ['fish', 'anchor', 'ship', 'sailboat', 'waves'];
       const count = 12; // Total number of marine life elements
       
       const newMarineLife = Array.from({ length: count }, (_, i) => {
         const typeIndex = Math.floor(Math.random() * types.length);
-        const direction = Math.random() > 0.5 ? 'left' : 'right';
+        const direction = Math.random() > 0.5 ? 'left' : 'right' as 'left' | 'right';
         const size = Math.random() * 0.5 + 0.5; // Size between 0.5 and 1
         const depth = Math.random();
         
@@ -67,18 +67,14 @@ const MarineLifeAnimation = () => {
     switch (type) {
       case 'fish':
         return <Fish {...iconProps} />;
-      case 'jellyfish':
-        return <Jellyfish {...iconProps} className="text-ocean-bioluminescent opacity-70 animate-jellyfish-pulse" />;
-      case 'dolphin':
-        return <Dolphin {...iconProps} />;
-      case 'whale':
-        return <Whale {...iconProps} />;
-      case 'crab':
-        return <Crab {...iconProps} />;
-      case 'seahorse':
-        return <Seahorse {...iconProps} />;
-      case 'squid':
-        return <Squid {...iconProps} />;
+      case 'anchor':
+        return <Anchor {...iconProps} className="text-ocean-bioluminescent opacity-70 animate-jellyfish-pulse" />;
+      case 'ship':
+        return <Ship {...iconProps} />;
+      case 'sailboat':
+        return <Sailboat {...iconProps} />;
+      case 'waves':
+        return <Waves {...iconProps} />;
       default:
         return <Fish {...iconProps} />;
     }
