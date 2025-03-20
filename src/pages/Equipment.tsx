@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Microscope, Flask, Waves, Ship } from 'lucide-react';
+import { Microscope, FlaskConical, Waves, Ship } from 'lucide-react';
 
 const Equipment = () => {
   const equipmentCategories = [
@@ -25,7 +25,7 @@ const Equipment = () => {
         {
           name: 'Water Analysis Kit',
           description: 'Portable chemistry lab for analyzing water samples for various parameters and pollutants.',
-          icon: <Flask className="h-12 w-12 text-ocean-light" />,
+          icon: <FlaskConical className="h-12 w-12 text-ocean-light" />,
         },
       ]
     },
