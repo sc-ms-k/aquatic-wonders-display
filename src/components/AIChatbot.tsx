@@ -1,11 +1,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, X, Minimize2, Maximize2 } from "lucide-react";
+import { MessageSquare, Send, X, Minimize2, Maximize2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Message {
   role: "user" | "assistant";
@@ -27,6 +28,7 @@ const AIChatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -35,6 +37,20 @@ const AIChatbot: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Marine data responses
+  const marineData = {
+    "coral reef": "Coral reefs are among the most diverse ecosystems on Earth, supporting approximately 25% of all marine species despite covering less than 1% of the ocean floor. They're threatened by climate change, with rising sea temperatures causing coral bleaching.",
+    "whale": "Whales are the largest animals on Earth. The blue whale can reach lengths of up to 100 feet and weigh as much as 200 tons. They use echolocation to navigate and find food in the deep ocean.",
+    "shark": "There are over 500 species of sharks in the world's oceans. They have existed for more than 450 million years, predating dinosaurs. Some species, like the whale shark, are filter feeders and pose no threat to humans.",
+    "ocean acidification": "Ocean acidification occurs when the ocean absorbs CO2 from the atmosphere, changing the water chemistry. This makes it harder for organisms like corals, clams, and some plankton to build their shells and skeletons.",
+    "marine conservation": "Marine conservation focuses on protecting ocean ecosystems and species through protected areas, sustainable fishing practices, and reducing pollution. Marine Protected Areas (MPAs) are crucial tools in these efforts.",
+    "deep sea": "The deep sea is one of Earth's least explored environments. The Mariana Trench reaches depths of nearly 11,000 meters. Deep-sea organisms have adapted to extreme pressure, cold temperatures, and complete darkness.",
+    "bioluminescence": "Bioluminescence is the production of light by living organisms. In the deep sea, approximately 90% of organisms produce their own light, using it for communication, attracting prey, and defense.",
+    "mangroves": "Mangrove forests protect coastlines, prevent erosion, and serve as nurseries for many marine species. They also sequester carbon at rates up to four times higher than tropical rainforests.",
+    "sea level rise": "Sea level rise is primarily caused by melting ice sheets and glaciers, along with thermal expansion of seawater as it warms. Current projections suggest global sea levels could rise by 0.3 to 2.5 meters by 2100.",
+    "plastic pollution": "Approximately 8 million tons of plastic enter the oceans each year. Microplastics have been found in marine organisms from the surface to the deepest ocean trenches.",
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -49,19 +65,22 @@ const AIChatbot: React.FC = () => {
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI response
+    // Search for relevant marine information
     setTimeout(() => {
-      const responses = [
-        "The deep sea is one of the least explored places on Earth. Scientists estimate we've only discovered about 5% of the ocean.",
-        "Coral reefs support approximately 25% of all marine species despite covering less than 1% of the ocean floor.",
-        "The blue whale is the largest animal ever known to have existed, reaching lengths of up to 100 feet.",
-        "The Mariana Trench is the deepest part of the world's oceans with a maximum depth of nearly 11,000 meters or 36,000 feet.",
-        "Ocean currents act like conveyor belts, moving warm water and precipitation from the equator toward the poles and cold water from the poles back to the tropics.",
-      ];
+      let responseText = "I don't have specific information about that marine topic. Would you like me to tell you about coral reefs, whales, sharks, ocean acidification, or marine conservation instead?";
+      
+      // Check if the user's message contains any of our keywords
+      const userQuestion = input.toLowerCase();
+      for (const [keyword, info] of Object.entries(marineData)) {
+        if (userQuestion.includes(keyword)) {
+          responseText = info;
+          break;
+        }
+      }
 
       const botMessage: Message = {
         role: "assistant",
-        content: responses[Math.floor(Math.random() * responses.length)],
+        content: responseText,
         timestamp: new Date(),
       };
 
@@ -90,10 +109,10 @@ const AIChatbot: React.FC = () => {
       >
         <Button
           onClick={toggleChat}
-          className="rounded-full w-14 h-14 bg-ocean-light text-ocean-deep shadow-lg hover:bg-ocean-light/90"
+          className="rounded-full w-12 h-12 sm:w-14 sm:h-14 bg-ocean-light text-ocean-deep shadow-lg hover:bg-ocean-light/90"
           size="icon"
         >
-          <MessageSquare size={24} />
+          <MessageSquare size={isMobile ? 20 : 24} />
         </Button>
       </motion.div>
 
@@ -106,13 +125,16 @@ const AIChatbot: React.FC = () => {
               opacity: 1,
               y: 0,
               scale: 1,
-              height: isMinimized ? "auto" : "500px",
+              height: isMinimized ? "auto" : isMobile ? "calc(100svh - 120px)" : "500px",
+              width: isMobile ? "calc(100vw - 24px)" : "360px",
             }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 350, damping: 25 }}
-            className="fixed bottom-24 right-6 z-50 w-80 md:w-96 overflow-hidden"
+            className={`fixed z-50 overflow-hidden ${
+              isMobile ? "bottom-16 right-4 left-4" : "bottom-24 right-6"
+            }`}
           >
-            <Card className="bg-ocean-deep/80 backdrop-blur-md border-white/10 shadow-xl rounded-2xl overflow-hidden flex flex-col">
+            <Card className="bg-ocean-deep/80 backdrop-blur-md border-white/10 shadow-xl rounded-2xl overflow-hidden flex flex-col h-full">
               {/* Header */}
               <div className="bg-ocean-light/20 p-3 flex justify-between items-center border-b border-white/10">
                 <h3 className="font-semibold text-white">Marine Research Assistant</h3>
@@ -147,7 +169,7 @@ const AIChatbot: React.FC = () => {
                       }`}
                     >
                       <div
-                        className={`p-3 rounded-2xl max-w-[80%] ${
+                        className={`p-3 rounded-2xl max-w-[85%] ${
                           message.role === "user"
                             ? "bg-ocean-light text-ocean-deep"
                             : "bg-white/10 text-white"
@@ -203,6 +225,12 @@ const AIChatbot: React.FC = () => {
                       <Send size={18} />
                     </Button>
                   </form>
+                  {!isMobile && (
+                    <div className="mt-2 text-xs flex items-center gap-1 text-white/50">
+                      <Info size={12} />
+                      <span>Try asking about: coral reefs, whales, sharks, deep sea</span>
+                    </div>
+                  )}
                 </div>
               )}
             </Card>

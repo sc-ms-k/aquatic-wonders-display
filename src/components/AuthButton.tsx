@@ -12,74 +12,61 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-
-interface UserData {
-  name: string;
-  email: string;
-  picture: string;
-}
+import { auth, googleProvider } from '@/lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 const AuthButton: React.FC = () => {
-  const [user, setUser] = useState<UserData | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   
-  // Check for existing user on mount
+  // Listen for auth state changes
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Failed to parse stored user', e);
-      }
-    }
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
-  // Simulating Google login flow
-  const login = () => {
+  // Handle Google sign in
+  const login = async () => {
     setLoading(true);
-    
-    // This is just a simulation. In a real app, you would use the actual Google OAuth flow.
-    setTimeout(() => {
-      const fakeUsers = [
-        {
-          name: "Marine Researcher",
-          email: "researcher@marine.org",
-          picture: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-        },
-        {
-          name: "Ocean Explorer",
-          email: "explorer@ocean.org",
-          picture: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-        },
-        {
-          name: "Marine Biologist",
-          email: "biologist@sea.org",
-          picture: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-        }
-      ];
-      
-      const randomUser = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
-      setUser(randomUser);
-      localStorage.setItem('user', JSON.stringify(randomUser));
-      
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
       toast({
         title: "Logged in successfully",
-        description: `Welcome, ${randomUser.name}!`,
+        description: `Welcome, ${result.user.displayName || result.user.email}!`,
       });
-      
+    } catch (error) {
+      console.error('Error during sign in:', error);
+      toast({
+        title: "Login failed",
+        description: "Could not sign in with Google. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
   
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    toast({
-      title: "Logged out",
-      description: "Come back soon!",
-    });
+  // Handle sign out
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      toast({
+        title: "Logged out",
+        description: "Come back soon!",
+      });
+    } catch (error) {
+      console.error('Error during sign out:', error);
+      toast({
+        title: "Logout failed",
+        description: "Could not sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
   
   if (user) {
@@ -88,15 +75,17 @@ const AuthButton: React.FC = () => {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-10 w-10 rounded-full">
             <Avatar className="h-10 w-10 border border-white/20">
-              <AvatarImage src={user.picture} alt={user.name} />
-              <AvatarFallback className="bg-ocean-deep">{user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={user.photoURL || ''} alt={user.displayName || 'User'} />
+              <AvatarFallback className="bg-ocean-deep">
+                {user.displayName ? user.displayName.charAt(0) : user.email?.charAt(0)}
+              </AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{user.name}</p>
+              <p className="text-sm font-medium leading-none">{user.displayName}</p>
               <p className="text-xs leading-none text-muted-foreground">
                 {user.email}
               </p>
@@ -123,7 +112,8 @@ const AuthButton: React.FC = () => {
       ) : (
         <User className="h-4 w-4" />
       )}
-      <span>Google Login</span>
+      <span className="hidden sm:inline">Google Login</span>
+      <span className="sm:hidden">Login</span>
     </Button>
   );
 };
