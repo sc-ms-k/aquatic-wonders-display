@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import MarineLifeAnimation from './MarineLifeAnimation';
+import Navigation from './Navigation';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -47,12 +48,15 @@ const Layout: React.FC<LayoutProps> = ({ children, className }) => {
       {/* Animated marine life */}
       <MarineLifeAnimation />
       
+      {/* Navigation */}
+      <Navigation />
+      
       {/* Main content */}
       <motion.main
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={cn("relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-8", className)}
+        className={cn("relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24", className)}
       >
         {children}
       </motion.main>
