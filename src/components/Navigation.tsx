@@ -1,86 +1,131 @@
 
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Fish, Home, Microscope, Factory, Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Menu, X } from 'lucide-react';
+import AuthButton from './AuthButton';
 
-const Navigation = () => {
+interface NavigationLink {
+  name: string;
+  path: string;
+}
+
+const Navigation: React.FC = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const links = [
-    { path: '/', label: 'Home', icon: <Home size={16} /> },
-    { path: '/equipment', label: 'Equipment', icon: <Microscope size={16} /> },
-    { path: '/facilities', label: 'Facilities', icon: <Factory size={16} /> },
+  
+  const links: NavigationLink[] = [
+    { name: 'Home', path: '/' },
+    { name: 'Equipment', path: '/equipment' },
+    { name: 'Facilities', path: '/facilities' },
   ];
-
-  const isActive = (path: string) => location.pathname === path;
-
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+  
+  useEffect(() => {
+    // Close the menu when route changes
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+  
   return (
-    <header className="fixed top-0 left-0 right-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
-          <Link to="/" className="flex items-center gap-2">
-            <Fish className="text-ocean-light h-8 w-8" />
-            <span className="font-bold text-xl">Marine Research</span>
-          </Link>
-          
-          {/* Desktop navigation */}
-          <nav className="hidden md:flex items-center gap-6">
-            {links.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                  isActive(link.path) 
-                    ? 'bg-ocean-light text-ocean-deep' 
-                    : 'text-white hover:bg-white/10'
-                }`}
-              >
-                {link.icon}
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          
-          {/* Mobile menu button */}
-          <button 
-            className="md:hidden p-2 rounded-full bg-white/10 text-white"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 py-4 px-4 sm:px-6 lg:px-8 transition-all duration-300',
+        scrolled ? 'bg-ocean-deep/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
+      )}
+    >
+      <div className="container flex justify-between items-center">
+        {/* Logo */}
+        <Link to="/" className="text-xl font-bold flex items-center">
+          <motion.div
+            whileHover={{ rotate: [0, -10, 10, -10, 0] }}
+            transition={{ duration: 0.5 }}
+            className="mr-2"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            🌊
+          </motion.div>
+          <span className="hidden sm:inline">Marine Research Institute</span>
+          <span className="sm:hidden">MRI</span>
+        </Link>
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex gap-6 items-center">
+          {links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={cn(
+                'relative transition-colors hover:text-ocean-light',
+                location.pathname === link.path ? 'text-ocean-light' : 'text-white'
+              )}
+            >
+              {link.name}
+              {location.pathname === link.path && (
+                <motion.div
+                  layoutId="navbar-indicator"
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-ocean-light"
+                />
+              )}
+            </Link>
+          ))}
+          <div className="ml-4">
+            <AuthButton />
+          </div>
+        </nav>
+        
+        {/* Mobile Menu Button */}
+        <div className="flex items-center gap-4 md:hidden">
+          <AuthButton />
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="text-white focus:outline-none"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
       
-      {/* Mobile navigation */}
-      {mobileMenuOpen && (
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="md:hidden bg-ocean-deep/90 backdrop-blur-md py-4"
-        >
-          <nav className="container mx-auto px-4 flex flex-col gap-2">
-            {links.map((link) => (
-              <Link 
-                key={link.path} 
-                to={link.path}
-                className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-colors ${
-                  isActive(link.path) 
-                    ? 'bg-ocean-light text-ocean-deep' 
-                    : 'text-white hover:bg-white/10'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.icon}
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-        </motion.div>
-      )}
-    </header>
+      {/* Mobile Navigation */}
+      <motion.div
+        initial={{ height: 0, opacity: 0 }}
+        animate={{
+          height: isMenuOpen ? 'auto' : 0,
+          opacity: isMenuOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.3 }}
+        className="overflow-hidden md:hidden"
+      >
+        <div className="container pt-4 pb-6 flex flex-col gap-4">
+          {links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={cn(
+                'px-4 py-2 rounded transition-colors',
+                location.pathname === link.path
+                  ? 'bg-ocean-light/20 text-ocean-light'
+                  : 'text-white hover:bg-white/10'
+              )}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+      </motion.div>
+    </motion.header>
   );
 };
 

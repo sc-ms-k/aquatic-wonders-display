@@ -23,14 +23,24 @@ const MarineLifeAnimation = () => {
     variant: number;
   }>>([]);
 
+  const [seaGrasses, setSeaGrasses] = useState<Array<{
+    id: number;
+    position: { x: number; y: number };
+    height: number;
+    width: number;
+    rotation: number;
+    variant: number;
+  }>>([]);
+
   useEffect(() => {
     // Generate random marine life
     const generateMarineLife = () => {
       const types = [
         'fish', 'anchor', 'ship', 'sailboat', 'waves', 
-        'research-station', 'factory', 'hotel', 'microscope'
+        'research-station', 'factory', 'hotel', 'microscope',
+        'tropical-fish', 'clownfish', 'angelfish', 'stingray'
       ];
-      const count = 20; // Increased number of marine life elements
+      const count = 25; // Increased number of marine life elements
       
       const newMarineLife = Array.from({ length: count }, (_, i) => {
         const typeIndex = Math.floor(Math.random() * types.length);
@@ -58,7 +68,7 @@ const MarineLifeAnimation = () => {
     
     // Generate coral reefs for the bottom of the page
     const generateCoralReefs = () => {
-      const count = 8; // Number of coral reef elements
+      const count = 12; // Increased number of coral reef elements
       const newCoralReefs = Array.from({ length: count }, (_, i) => {
         return {
           id: i,
@@ -75,8 +85,29 @@ const MarineLifeAnimation = () => {
       setCoralReefs(newCoralReefs);
     };
     
+    // Generate sea grasses for the bottom of the page
+    const generateSeaGrasses = () => {
+      const count = 15; // Number of sea grass elements
+      const newSeaGrasses = Array.from({ length: count }, (_, i) => {
+        return {
+          id: i,
+          position: {
+            x: Math.random() * 100, // Random x position
+            y: 95 + (Math.random() * 3), // At the bottom of the screen
+          },
+          height: Math.random() * 10 + 5, // Height between 5 and 15vh
+          width: Math.random() * 2 + 1, // Width between 1 and 3vh
+          rotation: Math.random() * 10 - 5, // Slight random rotation
+          variant: Math.floor(Math.random() * 4), // Different seagrass variants
+        };
+      });
+      
+      setSeaGrasses(newSeaGrasses);
+    };
+    
     generateMarineLife();
     generateCoralReefs();
+    generateSeaGrasses();
     
     // Regenerate periodically
     const interval = setInterval(() => {
@@ -98,6 +129,20 @@ const MarineLifeAnimation = () => {
     switch (type) {
       case 'fish':
         return <Fish {...iconProps} />;
+      case 'tropical-fish':
+        return <Fish {...iconProps} className="text-yellow-300 opacity-80" />;
+      case 'clownfish':
+        return <Fish {...iconProps} className="text-orange-400 opacity-80" />;
+      case 'angelfish':
+        return <Fish {...iconProps} className="text-blue-300 opacity-80" />;
+      case 'stingray':
+        return (
+          <svg width={baseSize} height={baseSize} viewBox="0 0 24 24" style={{ transform: `scaleX(${scaleX})` }} className="text-gray-300 opacity-70">
+            <path d="M22 12C22 13 21 14 20 14C19 14 18 13 18 12C18 11 19 10 20 10C21 10 22 11 22 12Z" fill="currentColor" />
+            <path d="M4 12C4 9 7 5 12 5C17 5 20 9 20 12C20 15 17 19 12 19C7 19 4 15 4 12Z" fill="currentColor" />
+            <path d="M2 12C2 13 3 14 4 14C5 14 6 13 6 12C6 11 5 10 4 10C3 10 2 11 2 12Z" fill="currentColor" />
+          </svg>
+        );
       case 'anchor':
         return <Anchor {...iconProps} className="text-ocean-bioluminescent opacity-70 animate-jellyfish-pulse" />;
       case 'ship':
@@ -143,8 +188,56 @@ const MarineLifeAnimation = () => {
     );
   };
 
+  // Render sea grasses
+  const renderSeaGrass = (variant: number, height: number, width: number, rotation: number) => {
+    const colors = [
+      "text-green-300 opacity-60",
+      "text-green-400 opacity-50",
+      "text-emerald-300 opacity-60",
+      "text-teal-300 opacity-50"
+    ];
+    
+    return (
+      <div 
+        className={`absolute ${colors[variant % colors.length]}`} 
+        style={{
+          height: `${height}vh`,
+          width: `${width}vw`,
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: 'bottom center',
+          animation: 'sway 10s ease-in-out infinite alternate'
+        }}
+      >
+        {variant % 2 === 0 ? (
+          // Straight sea grass
+          <div className="h-full w-full bg-current rounded-t-full" />
+        ) : (
+          // Curved sea grass
+          <div className="h-full w-full relative overflow-hidden">
+            <div className="absolute inset-0 bg-current rounded-t-full" style={{ clipPath: 'polygon(0 0, 100% 0, 85% 100%, 15% 100%)' }} />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Sea Grasses (bottom of screen) */}
+      {seaGrasses.map((grass) => (
+        <div
+          key={`grass-${grass.id}`}
+          className="absolute"
+          style={{
+            left: `${grass.position.x}vw`,
+            bottom: `${100 - grass.position.y}vh`,
+            zIndex: 3,
+          }}
+        >
+          {renderSeaGrass(grass.variant, grass.height, grass.width, grass.rotation)}
+        </div>
+      ))}
+
       {/* Coral Reefs (bottom of screen) */}
       {coralReefs.map((reef) => (
         <div
